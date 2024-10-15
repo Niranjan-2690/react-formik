@@ -1,11 +1,11 @@
 import { Formik } from 'formik';
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
-function Author() {
-  const [authors, setAuthors] = useState([]);
+function Author({ authors, setAuthors }) {
   const [editingAuthor, setEditingAuthor] = useState(null);
 
+  // Handle edit author
   function handleEdit(id) {
     const authorToEdit = authors.find((data) => data.id === id);
     if (authorToEdit) {
@@ -13,10 +13,14 @@ function Author() {
     }
   }
 
-  function handleDelete(id){
-    const authorDelete = [...authors]
-    setAuthors(authorDelete.filter((data)=>data.id !== id))
-  } 
+  // Handle delete author
+  function handleDelete(id) {
+    const updatedAuthors = authors.filter((data) => data.id !== id);
+    setAuthors(updatedAuthors);
+    
+    // Save updated authors to localStorage
+    localStorage.setItem("authors", JSON.stringify(updatedAuthors));
+  }
 
   return (
     <div>
@@ -35,29 +39,27 @@ function Author() {
         <Formik
           enableReinitialize
           initialValues={editingAuthor || { firstname: "", lastname: "", dob: "", biograph: "" }}
-
-          //------------------------------------------------
+          
           validate={values => {
             const errors = {};
-            if (values.firstname === "") {
+            if (!values.firstname) {
               errors.firstname = "Required";
-            } else if (values.lastname === "") {
+            } else if (!values.lastname) {
               errors.lastname = "Required";
-            } else if (values.dob === "") {
+            } else if (!values.dob) {
               errors.dob = "Required";
-            } else if (values.biograph === "") {
+            } else if (!values.biograph) {
               errors.biograph = "Required";
             } else if (values.biograph.length < 25) {
-              errors.biograph = "Characters should not be less than 25";
+              errors.biograph = "Biography must be at least 25 characters long";
             }
             return errors;
           }}
 
-          //-----------------------------------------------------------------
           onSubmit={(values, { resetForm }) => {
             let updatedAuthors;
             if (editingAuthor) {
-              updatedAuthors = authors.map(author =>
+              updatedAuthors = authors.map((author) =>
                 author.id === editingAuthor.id ? { ...values, id: editingAuthor.id } : author
               );
               setEditingAuthor(null);
@@ -65,14 +67,13 @@ function Author() {
               updatedAuthors = [...authors, { ...values, id: new Date().getTime() }];
             }
             setAuthors(updatedAuthors);
-        
+
             // Save authors to localStorage
             localStorage.setItem("authors", JSON.stringify(updatedAuthors));
-            
-            resetForm();
-        }}        
-        >
 
+            resetForm();
+          }}
+        >
           {({ values, errors, handleChange, handleBlur, handleSubmit }) => (
             <form className="row g-3 mt-3" onSubmit={handleSubmit}>
               <h1 className="text-center mb-3">Author</h1>
@@ -82,7 +83,7 @@ function Author() {
                 <p className="mt-1 text-danger">{errors.firstname}</p>
               </div>
               <div className="col-md-4">
-                <label htmlFor="lastname" className="form-label">Last Name</label>
+                <label htmlFor="lastname" className="form-label">Last name</label>
                 <input type="text" className="form-control" name="lastname" id="lastname" value={values.lastname} onChange={handleChange} onBlur={handleBlur} />
                 <p className="mt-1 text-danger">{errors.lastname}</p>
               </div>
@@ -92,7 +93,7 @@ function Author() {
                 <p className="mt-1 text-danger">{errors.dob}</p>
               </div>
               <div className="col-12">
-                <label htmlFor="biograph" className="form-label">Author Biograph</label>
+                <label htmlFor="biograph" className="form-label">Author Biography</label>
                 <textarea className="form-control" name="biograph" id="biograph" value={values.biograph} onChange={handleChange} onBlur={handleBlur} />
                 <p className="mt-1 text-danger">{errors.biograph}</p>
               </div>
@@ -102,7 +103,9 @@ function Author() {
             </form>
           )}
         </Formik>
+
         <hr />
+
         <table className="table mt-3">
           <thead>
             <tr>
